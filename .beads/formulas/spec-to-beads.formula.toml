@@ -1,0 +1,137 @@
+# OpenSpec to Beads Formula
+#
+# Converts an OpenSpec change proposal into beads work items.
+# Reads tasks.md from the specified change folder, creates beads for each task,
+# and groups them into a convoy for dispatch.
+#
+# Usage:
+#   gt formula run spec-to-beads --spec=openspec/changes/notification-levels
+#   gt formula run spec-to-beads --spec=openspec/changes/auth-refactor --rig=gastown
+
+description = """
+Convert OpenSpec tasks into dispatchable beads.
+
+Reads an OpenSpec change proposal's tasks.md file, creates a bead for each
+checklist item, and groups them into a convoy ready for dispatch.
+
+## What it does
+1. Reads proposal.md for context (optional)
+2. Parses tasks.md for checklist items
+3. Creates a bead for each task
+4. Creates a convoy grouping all tasks
+5. Outputs dispatch commands
+
+## OpenSpec Structure Expected
+```
+openspec/changes/<feature>/
+├── proposal.md   # Context and rationale (optional)
+└── tasks.md      # Implementation checklist
+```
+
+## Task Format
+Tasks should be markdown checkboxes:
+```markdown
+- [ ] Add NotificationLevel enum to config/types.go
+- [ ] Update escalation routing logic
+```
+"""
+formula = "spec-to-beads"
+type = "simple"
+version = 1
+
+# Input variables
+[inputs]
+[inputs.spec]
+description = "Path to OpenSpec change folder (e.g., openspec/changes/feature-name)"
+type = "string"
+required = true
+
+[inputs.rig]
+description = "Target rig for dispatch hints (optional)"
+type = "string"
+required = false
+
+[inputs.labels]
+description = "Additional labels to add to beads (comma-separated)"
+type = "string"
+required = false
+default = "task,openspec"
+
+[inputs.epic]
+description = "Epic/parent issue to link tasks to (optional)"
+type = "string"
+required = false
+
+# Prompt for the agent
+[prompts]
+base = """
+# OpenSpec to Beads Conversion
+
+You are converting an OpenSpec change proposal into Gas Town beads (work items).
+
+## Input
+- **Spec folder**: {{.spec}}
+- **Target rig**: {{.rig}}{{if not .rig}} (none specified){{end}}
+- **Labels**: {{.labels}}
+{{- if .epic}}
+- **Epic**: {{.epic}}
+{{- end}}
+
+## Steps
+
+### 1. Read the spec
+First, read the OpenSpec files to understand the work:
+
+```bash
+# Read the proposal for context (if exists)
+cat {{.spec}}/proposal.md 2>/dev/null || echo "No proposal.md found"
+
+# Read the tasks
+cat {{.spec}}/tasks.md
+```
+
+### 2. Parse tasks
+Extract all checkbox items from tasks.md. Each line matching `- [ ]` or `- [x]` is a task.
+Skip already-completed items (`- [x]`).
+
+### 3. Create beads
+For each uncompleted task, create a bead:
+
+```bash
+bd new "<task description>" --label={{.labels}}{{if .epic}} --epic={{.epic}}{{end}}
+```
+
+Capture the bead ID from each creation.
+
+### 4. Create convoy
+Group all created beads into a convoy:
+
+```bash
+# Extract feature name from spec path
+FEATURE=$(basename {{.spec}})
+
+# Create convoy with all bead IDs
+gt convoy create --name="$FEATURE" <bead-id-1> <bead-id-2> ...
+```
+
+### 5. Output summary
+Print a summary showing:
+- Feature name
+- Number of tasks created
+- List of bead IDs with descriptions
+- Dispatch command hint: `gt sling <bead-id> {{if .rig}}{{.rig}}{{else}}<rig>{{end}}`
+
+## Important
+- Skip tasks that are already marked complete `[x]`
+- Use the exact task text as the bead title (clean up markdown formatting)
+- If a task has sub-items, create separate beads for each
+- Preserve task order in the convoy
+
+## Output Location
+Write a summary to: `.specs/{{.spec | base}}/conversion-log.md`
+"""
+
+# Output configuration
+[output]
+directory = ".specs/{{.spec | base}}"
+summary = "conversion-log.md"
