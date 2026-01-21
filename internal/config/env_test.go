@@ -13,8 +13,8 @@ func TestAgentEnv_Mayor(t *testing.T) {
 
 	assertEnv(t, env, "GT_ROLE", "mayor")
 	assertEnv(t, env, "BD_ACTOR", "mayor")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "mayor")
 	assertEnv(t, env, "GT_ROOT", "/town")
+	assertNotSet(t, env, "GIT_AUTHOR_NAME")
 	assertNotSet(t, env, "GT_RIG")
 	assertNotSet(t, env, "BEADS_NO_DAEMON")
 }
@@ -30,8 +30,8 @@ func TestAgentEnv_Witness(t *testing.T) {
 	assertEnv(t, env, "GT_ROLE", "witness")
 	assertEnv(t, env, "GT_RIG", "myrig")
 	assertEnv(t, env, "BD_ACTOR", "myrig/witness")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "myrig/witness")
 	assertEnv(t, env, "GT_ROOT", "/town")
+	assertNotSet(t, env, "GIT_AUTHOR_NAME")
 }
 
 func TestAgentEnv_Polecat(t *testing.T) {
@@ -48,9 +48,9 @@ func TestAgentEnv_Polecat(t *testing.T) {
 	assertEnv(t, env, "GT_RIG", "myrig")
 	assertEnv(t, env, "GT_POLECAT", "Toast")
 	assertEnv(t, env, "BD_ACTOR", "myrig/polecats/Toast")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "Toast")
 	assertEnv(t, env, "BEADS_AGENT_NAME", "myrig/Toast")
 	assertEnv(t, env, "BEADS_NO_DAEMON", "1")
+	assertNotSet(t, env, "GIT_AUTHOR_NAME")
 }
 
 func TestAgentEnv_Crew(t *testing.T) {
@@ -67,9 +67,9 @@ func TestAgentEnv_Crew(t *testing.T) {
 	assertEnv(t, env, "GT_RIG", "myrig")
 	assertEnv(t, env, "GT_CREW", "emma")
 	assertEnv(t, env, "BD_ACTOR", "myrig/crew/emma")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "emma")
 	assertEnv(t, env, "BEADS_AGENT_NAME", "myrig/emma")
 	assertEnv(t, env, "BEADS_NO_DAEMON", "1")
+	assertNotSet(t, env, "GIT_AUTHOR_NAME")
 }
 
 func TestAgentEnv_Refinery(t *testing.T) {
@@ -84,8 +84,8 @@ func TestAgentEnv_Refinery(t *testing.T) {
 	assertEnv(t, env, "GT_ROLE", "refinery")
 	assertEnv(t, env, "GT_RIG", "myrig")
 	assertEnv(t, env, "BD_ACTOR", "myrig/refinery")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "myrig/refinery")
 	assertEnv(t, env, "BEADS_NO_DAEMON", "1")
+	assertNotSet(t, env, "GIT_AUTHOR_NAME")
 }
 
 func TestAgentEnv_Deacon(t *testing.T) {
@@ -97,10 +97,10 @@ func TestAgentEnv_Deacon(t *testing.T) {
 
 	assertEnv(t, env, "GT_ROLE", "deacon")
 	assertEnv(t, env, "BD_ACTOR", "deacon")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "deacon")
 	assertEnv(t, env, "GT_ROOT", "/town")
 	assertNotSet(t, env, "GT_RIG")
 	assertNotSet(t, env, "BEADS_NO_DAEMON")
+	assertNotSet(t, env, "GIT_AUTHOR_NAME")
 }
 
 func TestAgentEnv_Boot(t *testing.T) {
@@ -112,10 +112,10 @@ func TestAgentEnv_Boot(t *testing.T) {
 
 	assertEnv(t, env, "GT_ROLE", "boot")
 	assertEnv(t, env, "BD_ACTOR", "deacon-boot")
-	assertEnv(t, env, "GIT_AUTHOR_NAME", "boot")
 	assertEnv(t, env, "GT_ROOT", "/town")
 	assertNotSet(t, env, "GT_RIG")
 	assertNotSet(t, env, "BEADS_NO_DAEMON")
+	assertNotSet(t, env, "GIT_AUTHOR_NAME")
 }
 
 func TestAgentEnv_WithRuntimeConfigDir(t *testing.T) {

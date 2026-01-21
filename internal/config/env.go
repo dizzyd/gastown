@@ -48,37 +48,30 @@ func AgentEnv(cfg AgentEnvConfig) map[string]string {
 	switch cfg.Role {
 	case "mayor":
 		env["BD_ACTOR"] = "mayor"
-		env["GIT_AUTHOR_NAME"] = "mayor"
 
 	case "deacon":
 		env["BD_ACTOR"] = "deacon"
-		env["GIT_AUTHOR_NAME"] = "deacon"
 
 	case "boot":
 		env["BD_ACTOR"] = "deacon-boot"
-		env["GIT_AUTHOR_NAME"] = "boot"
 
 	case "witness":
 		env["GT_RIG"] = cfg.Rig
 		env["BD_ACTOR"] = fmt.Sprintf("%s/witness", cfg.Rig)
-		env["GIT_AUTHOR_NAME"] = fmt.Sprintf("%s/witness", cfg.Rig)
 
 	case "refinery":
 		env["GT_RIG"] = cfg.Rig
 		env["BD_ACTOR"] = fmt.Sprintf("%s/refinery", cfg.Rig)
-		env["GIT_AUTHOR_NAME"] = fmt.Sprintf("%s/refinery", cfg.Rig)
 
 	case "polecat":
 		env["GT_RIG"] = cfg.Rig
 		env["GT_POLECAT"] = cfg.AgentName
 		env["BD_ACTOR"] = fmt.Sprintf("%s/polecats/%s", cfg.Rig, cfg.AgentName)
-		env["GIT_AUTHOR_NAME"] = cfg.AgentName
 
 	case "crew":
 		env["GT_RIG"] = cfg.Rig
 		env["GT_CREW"] = cfg.AgentName
 		env["BD_ACTOR"] = fmt.Sprintf("%s/crew/%s", cfg.Rig, cfg.AgentName)
-		env["GIT_AUTHOR_NAME"] = cfg.AgentName
 	}
 
 	// Only set GT_ROOT if provided

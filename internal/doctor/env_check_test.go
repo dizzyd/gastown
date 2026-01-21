@@ -205,7 +205,7 @@ func TestEnvVarsCheck_PolecatMissing(t *testing.T) {
 		sessionEnvs: map[string]map[string]string{
 			"gt-myrig-Toast": {
 				"GT_ROLE": "polecat",
-				// Missing GT_RIG, GT_POLECAT, BD_ACTOR, GIT_AUTHOR_NAME
+				// Missing GT_RIG, GT_POLECAT, BD_ACTOR
 			},
 		},
 	}

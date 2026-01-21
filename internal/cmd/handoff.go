@@ -412,7 +412,6 @@ func buildRestartCommand(sessionName string) (string, error) {
 		runtimeConfig := config.LoadRuntimeConfig("")
 		exports = append(exports, "GT_ROLE="+gtRole)
 		exports = append(exports, "BD_ACTOR="+gtRole)
-		exports = append(exports, "GIT_AUTHOR_NAME="+gtRole)
 		if runtimeConfig.Session != nil && runtimeConfig.Session.SessionIDEnv != "" {
 			exports = append(exports, "GT_SESSION_ID_ENV="+runtimeConfig.Session.SessionIDEnv)
 		}
