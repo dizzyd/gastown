@@ -36,7 +36,7 @@ Tasks should be markdown checkboxes:
 ```
 """
 formula = "spec-to-beads"
-type = "simple"
+type = "workflow"
 version = 1
 
 # Input variables
