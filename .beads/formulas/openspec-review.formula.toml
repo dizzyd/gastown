@@ -1,0 +1,324 @@
+# OpenSpec Review Convoy Formula
+#
+# A convoy-style formula that spawns multiple polecats in parallel,
+# each reviewing an OpenSpec change proposal from a different perspective.
+# Results are synthesized into a unified review with actionable feedback.
+#
+# Usage:
+#   gt formula run openspec-review --spec=openspec/changes/notification-levels
+#   gt formula run openspec-review --spec=openspec/changes/merge-queue-redesign
+
+description = """
+Comprehensive OpenSpec review via parallel specialized reviewers.
+
+Each leg examines the spec from a different perspective. Findings are
+collected and synthesized into a prioritized, actionable review.
+
+## Legs (parallel execution)
+- **completeness**: Are all necessary sections and decisions present?
+- **clarity**: Is the proposal understandable? Are tasks clear?
+- **feasibility**: Are tasks implementable as written?
+- **scope**: Are tasks appropriately sized?
+- **traceability**: Do tasks map back to proposal decisions?
+- **risks**: Are risks identified? Edge cases considered?
+
+## Execution Model
+1. Each leg spawns as a separate polecat
+2. Polecats work in parallel
+3. Each writes findings to their designated output
+4. Synthesis step combines all findings into unified review
+
+## Output
+A .reviews/<review-id>/ directory containing:
+- Individual dimension analyses
+- openspec-review.md with unified feedback and recommendations
+"""
+formula = "openspec-review"
+type = "convoy"
+version = 1
+
+# Input variables - provided at runtime
+[inputs]
+[inputs.spec]
+description = "Path to OpenSpec directory (e.g., openspec/changes/my-feature)"
+type = "string"
+required = true
+
+[inputs.context]
+description = "Additional context about the project or constraints"
+type = "string"
+required = false
+
+# Base prompt template - injected into all leg prompts
+[prompts]
+base = """
+# OpenSpec Review Assignment
+
+You are a specialized spec reviewer participating in a convoy review.
+
+## Context
+- **Formula**: {{.formula_name}}
+- **Spec path**: {{.spec}}
+- **Your focus**: {{.leg.focus}}
+- **Leg ID**: {{.leg.id}}
+
+## OpenSpec Structure
+OpenSpec documents consist of:
+- **proposal.md**: Context, rationale, and design decisions (optional but recommended)
+- **tasks.md**: Implementation checklist with markdown checkboxes
+
+{{if .context}}
+## Additional Context
+{{.context}}
+{{end}}
+
+## Your Task
+{{.leg.description}}
+
+## Output Requirements
+Write your findings to: **{{.output_path}}**
+
+Structure your output as follows:
+```markdown
+# {{.leg.title}}
+
+## Summary
+(1-2 paragraph overview of findings)
+
+## Critical Issues
+(Must address before implementation)
+- Issue description with specific reference
+- Why this is critical
+- Suggested resolution
+
+## Major Issues
+(Should address before implementation)
+- ...
+
+## Minor Issues
+(Nice to address)
+- ...
+
+## Observations
+(Non-blocking notes and suggestions)
+- ...
+```
+
+Be specific. Reference exact text from the spec. Be actionable.
+"""
+
+# Output configuration
+[output]
+directory = ".reviews/{{.review_id}}"
+leg_pattern = "{{.leg.id}}-findings.md"
+synthesis = "openspec-review.md"
+
+# Leg definitions - each spawns a parallel polecat
+[[legs]]
+id = "completeness"
+title = "Completeness Review"
+focus = "Missing sections, decisions, and documentation gaps"
+description = """
+Review the spec for completeness and coverage.
+
+**For proposal.md, look for:**
+- Clear problem statement
+- Motivation and context
+- Design decisions with rationale
+- Alternatives considered (and why rejected)
+- Scope boundaries (what's in vs out)
+- Dependencies on other work
+- Success criteria / definition of done
+
+**For tasks.md, look for:**
+- All work items needed to implement the proposal
+- Clear acceptance criteria per task
+- Dependencies between tasks noted
+- Edge cases and error handling tasks
+- Testing tasks
+- Documentation tasks
+- Migration or rollout tasks if needed
+
+**Questions to answer:**
+- Could someone implement this without asking clarifying questions?
+- Are there obvious gaps in the task list?
+- Is the proposal self-contained or does it reference undefined concepts?
+"""
+
+[[legs]]
+id = "clarity"
+title = "Clarity Review"
+focus = "Understandability and communication quality"
+description = """
+Review the spec for clarity and communication quality.
+
+**For proposal.md, look for:**
+- Jargon without explanation
+- Ambiguous language ("should", "might", "probably")
+- Undefined acronyms or terms
+- Unclear pronouns or references
+- Missing diagrams where visuals would help
+- Wall of text without structure
+- Assumptions stated as facts
+
+**For tasks.md, look for:**
+- Vague task descriptions ("improve X", "fix Y")
+- Tasks that could be interpreted multiple ways
+- Missing context for why a task exists
+- Inconsistent terminology
+- Tasks that are actually multiple tasks
+- Missing acceptance criteria
+
+**Questions to answer:**
+- Would a new team member understand this in 5 minutes?
+- Are there sentences you had to read twice?
+- Could two engineers interpret a task differently?
+"""
+
+[[legs]]
+id = "feasibility"
+title = "Feasibility Review"
+focus = "Technical feasibility and implementability"
+description = """
+Review the spec for technical feasibility.
+
+**Look for:**
+- Tasks that assume capabilities that don't exist
+- Unrealistic technical requirements
+- Missing technical constraints
+- Dependencies on external systems not accounted for
+- Performance requirements that may be unachievable
+- Tasks that conflict with existing architecture
+- Hidden complexity in "simple" tasks
+- Tasks requiring knowledge/skills not on the team
+
+**Questions to answer:**
+- Can each task actually be implemented as written?
+- Are there hidden technical challenges?
+- Does this fit with the existing codebase architecture?
+- Are there external dependencies that could block this?
+"""
+
+[[legs]]
+id = "scope"
+title = "Scope Review"
+focus = "Task sizing and scope appropriateness"
+description = """
+Review the spec for appropriate task scoping.
+
+**Look for tasks that are too large:**
+- Tasks that would take more than a day
+- Tasks with multiple distinct deliverables
+- Tasks that touch many different systems
+- Tasks with "and" in them (often 2+ tasks)
+
+**Look for tasks that are too small:**
+- Tasks that are trivial one-liners
+- Tasks that should be combined
+- Tasks that add overhead without value
+
+**Look for scope issues:**
+- Scope creep beyond the problem statement
+- Gold plating (nice-to-haves mixed with must-haves)
+- Missing MVP vs follow-up distinction
+- Tasks unrelated to the stated goal
+
+**Questions to answer:**
+- Is each task a meaningful unit of work?
+- Could the scope be reduced while still solving the problem?
+- Is there a clear MVP path?
+"""
+
+[[legs]]
+id = "traceability"
+title = "Traceability Review"
+focus = "Alignment between proposal and tasks"
+description = """
+Review the spec for traceability between proposal and tasks.
+
+**Look for:**
+- Tasks that don't connect to any proposal decision
+- Proposal decisions with no corresponding tasks
+- Tasks that contradict proposal statements
+- Orphan tasks (implementation without rationale)
+- Missing tasks for stated requirements
+- Task ordering that contradicts proposal flow
+
+**Questions to answer:**
+- Can you trace each task back to a proposal decision?
+- Are all proposal commitments covered by tasks?
+- Would completing all tasks fully implement the proposal?
+- Are there tasks that seem to come from nowhere?
+"""
+
+[[legs]]
+id = "risks"
+title = "Risk Review"
+focus = "Risks, edge cases, and failure modes"
+description = """
+Review the spec for risk identification and mitigation.
+
+**Look for:**
+- Unacknowledged technical risks
+- Missing rollback plan
+- No mention of failure modes
+- Optimistic assumptions without fallbacks
+- Security implications not addressed
+- Data migration risks
+- Performance impact not considered
+- Breaking changes not flagged
+- Missing backward compatibility consideration
+
+**Questions to answer:**
+- What could go wrong during implementation?
+- What could go wrong after deployment?
+- Are there risks the author may not have considered?
+- Is there a plan B if this doesn't work?
+"""
+
+# Synthesis step - combines all leg outputs
+[synthesis]
+title = "OpenSpec Review Synthesis"
+description = """
+Combine all leg findings into a unified, prioritized review.
+
+**Your input:**
+All leg findings from: {{.output.directory}}/
+
+**Your output:**
+A synthesized review at: {{.output.directory}}/{{.output.synthesis}}
+
+**Structure:**
+```markdown
+# OpenSpec Review: {{.spec}}
+
+## Verdict
+(APPROVE / NEEDS_REVISION / MAJOR_CONCERNS)
+
+## Executive Summary
+(2-3 paragraph overview: what's good, what needs work, overall assessment)
+
+## Critical Issues
+(Must address before implementation - from all legs, deduplicated)
+
+## Major Issues
+(Should address - grouped by theme)
+
+## Minor Issues
+(Nice to address - briefly listed)
+
+## Strengths
+(What's done well in this spec)
+
+## Recommendations
+(Prioritized action items for the author)
+
+1. [Critical] ...
+2. [Major] ...
+3. [Minor] ...
+```
+
+Deduplicate issues found by multiple legs (note which legs found them).
+Prioritize by impact on implementation success. Be constructive and actionable.
+"""
+depends_on = ["completeness", "clarity", "feasibility", "scope", "traceability", "risks"]
